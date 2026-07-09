@@ -48,4 +48,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
 
-async def
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+    text = " ".join(context.args)
+    if not text:
+        await update.message.reply_text("Напиши текст после /broadcast")
+        return
+    users = get_all_users()
+    ok, fail = 0, 0
+    for uid in users:
+        try:
+            await context.bot.send_message(chat_id=uid, text=text)
+            ok += 1
+        except:
+            fail += 1
+    await update.message.reply_text(f"Готово! Отправлено: {ok}, ошибок: {fail}")
+
+async def main():
+    init_db()
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("broadcast", broadcast))
+    app.add_handler(CallbackQueryHandler(button_handler))
+    await app.run_polling()
+
+if __name__ == "__main__":
+    asyncio.run(main())
